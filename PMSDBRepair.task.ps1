@@ -1,4 +1,5 @@
 $exec_time = Get-Date -Format yyyyMMdd_HHmm
+$start_date = Get-Date -Format yyyy/MM/dd
 $start_time = Get-Date -Format HH:mm
 $host_name = Get-Content Env:COMPUTERNAME
 $log_file = "PMSDBRepair_" + $($host_name) + "_" + $($exec_time) + ".log"
@@ -7,19 +8,19 @@ $log_file = "PMSDBRepair_" + $($host_name) + "_" + $($exec_time) + ".log"
 # Write-Host $host_name
 # Write-Host $log_file
 
-pwsh.exe -executionpolicy bypass -C '.\PlexDBRepair\Windows\DBRepair-Windows.ps1 STOP ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 PRUN ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 AUTO ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 STAR' | Out-File .\PlexDBRepair\Logs\$log_file
+pwsh.exe -executionpolicy bypass -C "$env:USERPROFILE\.scripts\PlexDBRepair\Windows\DBRepair-Windows.ps1 STOP ; $env:USERPROFILE\.scripts\PlexDBRepair\Windows\DBRepair-Windows.ps1 PRUN ; $env:USERPROFILE\.scripts\PlexDBRepair\Windows\DBRepair-Windows.ps1 AUTO ; $env:USERPROFILE\.scripts\PlexDBRepair\Windows\DBRepair-Windows.ps1 STAR" | Out-File $env:USERPROFILE\.scripts\PlexDBRepair\Logs\$log_file
 $end_time = Get-Date -Format HH:mm
 
 $user = "info@cowsteak.org"
-$securePassword = Get-Content 'C:\\Users\\muelm\\.scripts\\PlexDBRepair\\Windows\\DBRepair-Windows.ps1.xml' | ConvertTo-SecureString
+$securePassword = Get-Content "$env:USERPROFILE\.scripts\PlexDBRepair\Windows\DBRepair-Windows.ps1.xml" | ConvertTo-SecureString
 $credential = New-Object System.Management.Automation.PSCredential($user, $securePassword)
-$subject = "PMS DB Repair results for " + $host_name
+$subject = "PMS DB Repair results for $host_name on $start_date"
 $body = @"
 PMS Database Repair Script results:
 
-DBRepair log file for $host_name is attached.
-
 DBRepair tasks started at $start_time and ended at $end_time.
+
+DBRepair log file for $host_name is attached.
 "@
 $recipient = "muelmi@live.com"
 $server = "mail.privateemail.com"

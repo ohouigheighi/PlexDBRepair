@@ -7,15 +7,18 @@ $log_file = "PMSDBRepair_" + $($host_name) + "_" + $($exec_time) + ".log"
 # Write-Host $host_name
 # Write-Host $log_file
 
-pwsh.exe -noprofile -executionpolicy bypass -C '.\PlexDBRepair\Windows\DBRepair-Windows.ps1 STOP ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 PRUN ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 AUTO ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 STAR' | Out-File .\PlexDBRepair\Logs\$log_file
+pwsh.exe -executionpolicy bypass -C '.\PlexDBRepair\Windows\DBRepair-Windows.ps1 STOP ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 PRUN ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 AUTO ; .\PlexDBRepair\Windows\DBRepair-Windows.ps1 STAR' | Out-File .\PlexDBRepair\Logs\$log_file
 $end_time = Get-Date -Format HH:mm
 
 $user = "info@cowsteak.org"
 $securePassword = Get-Content 'C:\\Users\\muelm\\.scripts\\PlexDBRepair\\Windows\\DBRepair-Windows.ps1.xml' | ConvertTo-SecureString
 $credential = New-Object System.Management.Automation.PSCredential($user, $securePassword)
-$subject = "PMS DBRepair results for " + $host_name
+$subject = "PMS DB Repair results for " + $host_name
 $body = @"
-PMS Database Repair log for $host_name is attached.
+PMS Database Repair Script results:
+
+DBRepair log file for $host_name is attached.
+
 DBRepair tasks started at $start_time and ended at $end_time.
 "@
 $recipient = "muelmi@live.com"
@@ -46,3 +49,5 @@ Send-MailMessage -To $recipient -From $user -Subject $subject -Body $body -SmtpS
 #     # Credential = $credential  
 # }
 # Send-MailMessage -Credential $credential @sendMailMessageSplat
+
+# https://github.com/austineric/Send-MailKitMessage

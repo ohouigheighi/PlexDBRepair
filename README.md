@@ -1,9 +1,9 @@
-# PlexDBRepair
+# DBRepair (for Plex Media Server)
 
-[![GitHub issues](https://img.shields.io/github/issues/ChuckPa/PlexDBRepair.svg?style=flat)](https://github.com/ChuckPa/PlexDBRepair/issues)
-[![Release](https://img.shields.io/github/release/ChuckPa/PlexDBRepair.svg?style=flat)](https://github.com/ChuckPa/PlexDBRepair/releases/latest)
-[![Download latest release](https://img.shields.io/github/downloads/ChuckPa/PlexDBRepair/latest/total.svg)](https://github.com/ChuckPa/PlexDBRepair/releases/latest)
-[![Download total](https://img.shields.io/github/downloads/ChuckPa/PlexDBRepair/total.svg)](https://github.com/ChuckPa/PlexDBRepair/releases)
+[![GitHub issues](https://img.shields.io/github/issues/ChuckPa/DBRepair.svg?style=flat)](https://github.com/ChuckPa/DBRepair/issues)
+[![Release](https://img.shields.io/github/release/ChuckPa/DBRepair.svg?style=flat)](https://github.com/ChuckPa/DBRepair/releases/latest)
+[![Download latest release](https://img.shields.io/github/downloads/ChuckPa/DBRepair/latest/total.svg)](https://github.com/ChuckPa/DBRepair/releases/latest)
+[![Download total](https://img.shields.io/github/downloads/ChuckPa/DBRepair/total.svg)](https://github.com/ChuckPa/DBRepair/releases)
 [![master](https://img.shields.io/badge/master-stable-green.svg?maxAge=2592000)]('')
 ![Maintenance](https://img.shields.io/badge/Maintained-Yes-green.svg)
 
@@ -29,14 +29,15 @@ If sufficient privleges exist (root), and supported by the environment, the opti
 
  The following commands (or their number), listed in alphabetical order,  are accepted as input.
 ```
-   AUTO(matic)  - Automatically check, repair/optimize, and reindex the databases in one step.
-   CHEC(k)      - Check the main and blob databases integrity
+   AUTO(matic)  - Automatically check, repair/optimize, reindex, and FTS rebuild in one step.
+   CHEC(k)      - Check the main and blob databases integrity (includes FTS index check)
+   DEFL(ate)    - Deflate a bloated PMS database (faulty statistics data)
    EXIT         - Exit the utility
    IGNOre/HONOr - Ignore/Honor constraint errors when IMPORTing additional data into DB.
    IMPO(rt)     - Import viewstate / watch history from another database
    PRUN(e)      - Prune (remove) old image files from transcoder cache diretory
    PURG(e)      - Purge (delete) all temporary files left behind by PMS & the transcoder from the temp directory
-   REIN(dex)    - Rebuild the database indexes
+   REIN(dex)    - Rebuild the database indexes (includes FTS indexes)
    REPL(ace)    - Replace the existing databases with a PMS-generated backup
    SHOW         - Show the log file
    STAR(t)      - Start PMS (not available on all platforms)
@@ -51,14 +52,14 @@ If sufficient privleges exist (root), and supported by the environment, the opti
   For clarity, each command's name is 'quoted'.
 
 ```
-      Plex Media Server Database Repair Utility (_host_configuration_name_)
+            Database Repair Utility for Plex Media Server (_host_configuration_name_)
                        Version v1.09.00
 
   Select
 
   1 - 'stop'      - Stop PMS.
-  2 - 'automatic' - Check, Repair/Optimize, and Reindex Database in one step.
-  3 - 'check'     - Perform integrity check of database.
+  2 - 'automatic' - Check, Repair/Optimize, Reindex, and FTS rebuild in one step.
+  3 - 'check'     - Perform integrity check of database and FTS indexes.
   4 - 'vacuum'    - Remove empty space from database without optimizing.
   5 - 'repair'    - Repair/Optimize databases.
   6 - 'reindex'   - Rebuild database indexes.
@@ -72,11 +73,12 @@ If sufficient privleges exist (root), and supported by the environment, the opti
 
  21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
  22 - 'purge'     - Purge (delete) all temporary files left behind by PMS & the transcoder.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99   'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) :
 
@@ -92,14 +94,23 @@ Enter command # -or- command name (4 char min) :
            - BINHEX
            - HOTIO
            - Podman (libgpod)
-        4. Linux workstation & server
-        5. MacOS
-        6. Netgear (OS5 Linux-based systems)
-        7. QNAP (QTS & QuTS)
-        8. Synology (DSM 6 & DSM 7)
-        9. Western Digital (OS5)
+        4. FreeBSD (14+)
+        5. Linux workstation & server
+        6. MacOS
+        7. Netgear (OS5 Linux-based systems)
+        8. QNAP (QTS & QuTS)
+        9. Synology (DSM 6 & DSM 7)
+       10. Western Digital (OS5)
 ```
  # Installation
+
+### Downloading
+    Download DBRepair.sh (if you want just the script)
+    # This overwrites any existing version.  Remove "-O DBRepair.sh" to not overwrite.
+```
+    wget -O DBRepair.sh https://github.com/ChuckPa/PlexDBRepair/releases/latest/download/DBRepair.sh
+```
+### Moving the downloaded DBRepair.sh
 
     Where to place the utility varies from host to host.
     Please use this table as a reference.
@@ -112,10 +123,11 @@ Enter command # -or- command name (4 char min) :
     -------------------+---------------------+------------------------------------------
     Apple              | Downloads           |  ~/Downloads
     Arch Linux         | N/A                 |  Anywhere
-    ASUSTOR            | Public              |  /volume1/Public
+    ASUSTOR            | Plex                |  /volume1/Plex
     Binhex             | N/A                 |  Container root (adjacent /config)
     Docker (Plex,LSIO) | N/A                 |  Container root (adjacent /config)
     Hotio              | N/A                 |  Container root (adjacent /config)
+    FreeBSD (14+)      | N/A                 |  Anywhere
     Kubernetes         | N/A                 |  Container root (adjacent /config)
     Linux (wkstn/svr)  | N/A                 |  Anywhere
     MacOS              | N/A                 |  Anywhere
@@ -131,13 +143,25 @@ Enter command # -or- command name (4 char min) :
     Additional hosts and docker images can easily be supported in almost all cases with appropriate path
     information.   Please contact me as needed.
 
+### Gettting a usable command line session
+        1. Accessing a NAS
+            Open a terminal/command line window on your computer.
+            type: ssh admin-username@IP.addr.of.NAS
+
+        2. Linux
+            Open a terminal session and elevate to the root (sudo) user
+
+        3. Windows  -- for Windows PMS hosts
+            Open a Command window
+            Follow the instructions for the Windows version of DBRepair
+
 
 ### General installation and usage instructions
 
-        1. Open your browser to https://github.com/ChuckPa/PlexDBRepair/releases/latest
+        1. Open your browser to https://github.com/ChuckPa/DBRepair/releases/latest
         2. Download the source code (tar.gz or ZIP) file
 
-        3. Knowing the file name will always be of the form 'PlexDBRepair-X.Y.Z.tar.gz'
+        3. Knowing the file name will always be of the form 'DBRepair-X.Y.Z.tar.gz'
            --  where X.Y.Z is the release number.  Use the real values in place of X, Y, and Z.
         4. Place the tar.gz file in the appropriate directory on the system you'll use it.
         5. Open a command line session (usually Terminal or SSH)
@@ -156,8 +180,8 @@ Enter command # -or- command name (4 char min) :
 
         cd /volume1/Plex    # use /volume1/PlexMediaServer on DSM 7
         sudo bash
-        tar xf PlexDBRepair-x.y.z.tar.gz
-        cd PlexDBRepair-x.y.z
+        tar xf DBRepair-x.y.z.tar.gz
+        cd DBRepair-x.y.z
         chmod +x DBRepair.sh
         ./DBRepair.sh
 
@@ -168,8 +192,8 @@ Enter command # -or- command name (4 char min) :
         sudo docker exec -it plex /bin/bash
 
         # extract from downloaded version file name then cd into directory
-        tar xf PlexDBRepair-x.y.z.tar.gz
-        cd PlexDBRepair-x.y.z
+        tar xf DBRepair-x.y.z.tar.gz
+        cd DBRepair-x.y.z
         chmod +x DBRepair.sh
         ./DBRepair.sh
 ```
@@ -177,8 +201,8 @@ Enter command # -or- command name (4 char min) :
 ```
         sudo bash
         cd /path/to/DBRepair.tar
-        tar xf PlexDBRepair-x.y.z.tar.gz
-        cd PlexDBRepair-x.y.z
+        tar xf DBRepair-x.y.z.tar.gz
+        cd DBRepair-x.y.z
         chmod +x DBRepair.sh
         ./DBRepair.sh stop auto start exit
 ```
@@ -187,8 +211,8 @@ Enter command # -or- command name (4 char min) :
 ```
         osascript -e 'quit app "Plex Media Server"'
         cd ~/Downloads
-        tar xf PlexDBRepair-x.y.z.tar.gz
-        cd PlexDBRepair-x.y.z
+        tar xf DBRepair-x.y.z.tar.gz
+        cd DBRepair-x.y.z
 
         chmod +x DBRepair.sh
         ./DBRepair.sh
@@ -220,27 +244,37 @@ These examples
 
   C. Database is malformed - No Backups
     1. (3)  Check   - Confirm either main or blobs database is damaged
-    2. (5)  Repair  - Salavage as much as possible from the databases and rebuild them into a usable database.
+    2. (5)  Repair  - Salvage as much as possible from the databases and rebuild them into a usable database.
     3. (6)  Reindex - Generate new indexes so PMS doesn't need to at startup
     4. (99) Exit
 
-  C. Database sizes excessively large when compared to amount of media indexed (item count)
-    1. (3)  Check   - Make certain both databases are fully intact  (repair if needed)
-    2. (4)  Vacuum  - Instruct SQLite to rebuild its tables and recover unused space.
-    3. (6)  Reindex - Rebuild Indexes.
+  D. Database sizes excessively large/bloated when compared to amount of media indexed (item count)
+    1. (23) Deflate - Correct the known problem with a database table and recover the wasted space.
+    2. (2)  Auto    - Perform automated check, repair, and reindex of the deflated database
     4. (99) Exit
 
-  D. User interface has become 'sluggish' as more media was added
+  E. User interface has become 'sluggish' as more media was added
     1. (3)  Check   - Confirm there is no database damage
     2. (5)  Repair  - You are not really repairing.  You are rebuilding the DB in perfect sorted order.
     3. (6)  Reindex - Rebuild Indexes.
     4. (99) Exit
 
-  E. Undo
+  F. Undo
     Undo is a special case where you need the utility to backup ONE step.
     This is rarely needed.  The only time you might want/need to backup one step is if Replace leaves you worse off
     than you were before. In this case, UNDO then Repair.  Undo can only undo the single most-recent action.
     (Note: In a future release, you will be able to 'undo' every action taken until the DBs are in their original state)
+
+  G. HTTP 500 errors when adding to collections / FTS index corruption
+    This occurs when standard integrity_check passes but FTS (Full-Text Search) indexes are corrupted.
+    Symptoms: Adding items to collections fails, updating metadata fails, "database disk image is malformed"
+    during UPDATE operations even though Check reports databases are OK.
+
+    1. (3)  Check   - Will show "FTS index damaged" message
+    2. (6)  Reindex - Rebuild indexes including FTS
+    3. (99) Exit
+
+    Alternatively, use (2) Automatic which will detect and repair FTS issues automatically.
 
 Special considerations:
 
@@ -266,14 +300,10 @@ Attention:
    --  This is for when DB operations keep getting worse and you don't know what to do.
        "99" is an old 'Get Smart' TV series reference where agent 99 would try to save agent 86 from harm.
 
-  "99" was originally going to be "Quit immediately save all files" but development feedback
-  resulted in this configuration
+  Community feedback has resulted in:
 
-  "Exit" is the preferred method to leave.
-
-  "Quit" was desired instead of "99" but there are those who didn't understand the difference or references.
-
-  If community feedback wants both "Quit. save temps" and "Exit, delete temps", behavior is easily changed.
+    "99" or "Exit" - Preferred way to exit and cleanup temp databases
+    "98" or "Quit" - Get out now without deleting the temp databases (Usually used only during unexpected failures)
 
   Also please be aware the script understands interactive versus scripted mode.
 
@@ -331,7 +361,7 @@ bash-4.4# ./DBRepair.sh
 
 
 
-      Plex Media Server Database Repair Utility (Ubuntu 20.04.6 LTS)
+      Database Repair Utility for Plex Media Server (Ubuntu 20.04.6 LTS)
                        Version v1.03.01
 
 Select
@@ -350,12 +380,14 @@ Select
  11 - 'status'    - Report status of PMS (run-state and databases).
  12 - 'undo'      - Undo last successful command.
 
- 21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
+ 21 - 'prune'     - Remove old image files (jpeg,jpg,png) from PhotoTranscoder cache & all temp files left by PMS.
+ 22 - 'purge'     - Remove unused temp files.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) :  1
 
@@ -378,12 +410,14 @@ Select
  11 - 'status'    - Report status of PMS (run-state and databases).
  12 - 'undo'      - Undo last successful command.
 
- 21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
+ 21 - 'prune'     - Remove old image files (jpeg,jpg,png) from PhotoTranscoder cache & all temp files left by PMS.
+ 22 - 'purge'     - Remove unused temp files.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) : auto
 
@@ -432,12 +466,14 @@ Select
  11 - 'status'    - Report status of PMS (run-state and databases).
  12 - 'undo'      - Undo last successful command.
 
- 21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
+ 21 - 'prune'     - Remove old image files (jpeg,jpg,png) from PhotoTranscoder cache & all temp files left by PMS.
+ 22 - 'purge'     - Remove unused temp files.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) : start
 
@@ -460,12 +496,14 @@ Select
  11 - 'status'    - Report status of PMS (run-state and databases).
  12 - 'undo'      - Undo last successful command.
 
- 21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
+ 21 - 'prune'     - Remove old image files (jpeg,jpg,png) from PhotoTranscoder cache & all temp files left by PMS.
+ 22 - 'purge'     - Remove unused temp files.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) : stat
 
@@ -491,12 +529,14 @@ Select
  11 - 'status'    - Report status of PMS (run-state and databases).
  12 - 'undo'      - Undo last successful command.
 
- 21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache.
+ 21 - 'prune'     - Remove old image files (jpeg,jpg,png) from PhotoTranscoder cache & all temp files left by PMS.
+ 22 - 'purge'     - Remove unused temp files.
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) : exit
 
@@ -514,7 +554,7 @@ root@lizum:/sata/plex/Plex Media Server/Plug-in Support/Databases# ./DBRepair.sh
 
 
 
-      Plex Media Server Database Repair Utility (Ubuntu 20.04.5 LTS)
+      Database Repair Utility for Plex Media Server (Ubuntu 20.04.5 LTS)
                        Version v1.03.01
 
 
@@ -638,6 +678,20 @@ root@lizum:/sata/plex/Plex Media Server/Plug-in Support/Databases#
 
   Checks the integrity of the Plex main and blobs databases.
 
+  Also performs FTS (Full-Text Search) index integrity checks. FTS indexes can become
+  corrupted even when standard integrity checks pass, causing operations like adding
+  items to collections to fail with "database disk image is malformed" errors.
+
+  If FTS corruption is detected, use 'reindex' (option 6) or 'automatic' (option 2)
+  to rebuild the FTS indexes.
+
+### Deflate
+
+  Repairs a known error in the PMS main database "statistics_bandwidth" table.
+  After repairing it,  it purges all the errant data from the table (reducing DB size)
+
+  This task can take a significant amount of time.  It's frequently used when the DB size is an order of magnitude above what it should be (e.g.  31 GB vs 206 MB).  Reductions from 134 GB to 210 MB have been realized.
+
 ### Exit
 
   Exits the utility and removes all temporary database files created during processing.
@@ -673,6 +727,11 @@ root@lizum:/sata/plex/Plex Media Server/Plug-in Support/Databases#
 
   Rebuilds the database indexes after an import, repair, or replace operation.
   These indexes are used by PMS for searching (both internally and your typed searches)
+
+  Also checks FTS (Full-Text Search) index integrity and rebuilds if corruption is detected.
+  FTS indexes can become corrupted even when standard integrity checks pass, causing
+  "database disk image is malformed" errors during UPDATE operations (e.g., adding items
+  to collections, updating metadata).
 
 ### Repair
 
@@ -815,55 +874,77 @@ root@lizum:/sata/plex/Plex Media Server/Plug-in Support/Databases#
   1.  Remove the environment variable.
   2.  Run DBRepair again using "automatic".  Your databases will revert to the host OS's default.
 
-### Usage:  (Linux example shown)
+### Usage:  (QNAP example shown)
 
 ```
 # export DBREPAIR_PAGESIZE=65534
-# ./DBRepair.sh stop auto start exit
+# ./DBRepair.sh stop deflate auto start exit
 
 
 
-      Plex Media Server Database Repair Utility (Ubuntu 22.04.3 LTS)
-                       Version v1.03.01
+      Database Repair Utility for Plex Media Server  (QNAP)
+                       Version v1.12.00
 
 
-[2024-01-14 17.25.35] Stopping PMS.
-[2024-01-14 17.25.35] Stopped PMS.
+[2025-10-21 16.54.00] PMS already stopped.
 
-[2024-01-14 17.25.35] Automatic Check,Repair,Index started.
-[2024-01-14 17.25.35]
-[2024-01-14 17.25.35] Checking the PMS databases
-[2024-01-14 17.25.48] Check complete.  PMS main database is OK.
-[2024-01-14 17.25.48] Check complete.  PMS blobs database is OK.
-[2024-01-14 17.25.48]
-[2024-01-14 17.25.48] Exporting current databases using timestamp: 2024-01-14_17.25.35
-[2024-01-14 17.25.48] Exporting Main DB
-[2024-01-14 17.25.59] Exporting Blobs DB
-[2024-01-14 17.26.00] Successfully exported the main and blobs databases.  Proceeding to import into new databases.
-[2024-01-14 17.26.00] Importing Main DB.
-[2024-01-14 17.26.00] Setting Plex SQLite page size (65536)
-[2024-01-14 17.26.29] Importing Blobs DB.
-[2024-01-14 17.26.29] Setting Plex SQLite page size (65536)
-[2024-01-14 17.26.30] Successfully imported databases.
-[2024-01-14 17.26.30] Verifying databases integrity after importing.
-[2024-01-14 17.27.43] Verification complete.  PMS main database is OK.
-[2024-01-14 17.27.43] Verification complete.  PMS blobs database is OK.
-[2024-01-14 17.27.43] Saving current databases with '-BACKUP-2024-01-14_17.25.35'
-[2024-01-14 17.27.43] Making repaired databases active
-[2024-01-14 17.27.43] Repair complete. Please check your library settings and contents for completeness.
-[2024-01-14 17.27.43] Recommend:  Scan Files and Refresh all metadata for each library section.
-[2024-01-14 17.27.43]
-[2024-01-14 17.27.43] Backing up of databases
-[2024-01-14 17.27.43] Backup current databases with '-BACKUP-2024-01-14_17.27.43' timestamp.
-[2024-01-14 17.27.44] Reindexing main database
-[2024-01-14 17.28.08] Reindexing main database successful.
-[2024-01-14 17.28.08] Reindexing blobs database
-[2024-01-14 17.28.08] Reindexing blobs database successful.
-[2024-01-14 17.28.08] Reindex complete.
-[2024-01-14 17.28.08] Automatic Check, Repair/optimize, & Index successful.
+[2025-10-21 16.54.00] Check and Deflate started.
+[2025-10-21 16.54.00]
+[2025-10-21 16.54.00] Checking the PMS databases
+[2025-10-21 16.54.19] Check complete.  PMS main database is OK.
+[2025-10-21 16.54.21] Check complete.  PMS blobs database is OK.
+[2025-10-21 16.54.21]
+[2025-10-21 16.54.21] Backup current databases with '-BACKUP-2025-10-21_16.54.21' timestamp.
+[2025-10-21 16.56.29] Starting Deflate (Part 1 of 2 - Repair database table)
+[2025-10-21 16.56.29] Estimated completion is approx 6 minutes but is CPU & I/O speed dependent
+[2025-10-21 16.56.29]
+[2025-10-21 16.56.30] PMS main database successfully repaired.
+[2025-10-21 16.56.30] Starting Deflate (Part 2 of 2 - Reduce size)
+[2025-10-21 16.56.35] PMS main database size reduced.
+[2025-10-21 16.56.35] Verifying PMS main database.
+[2025-10-21 16.56.50] Verification complete.  PMS main database is OK.
+[2025-10-21 16.56.50] PMS main database reduced from 31586 MB to 206 MB
+[2025-10-21 16.56.51] Saving current main database with '-BLOATED-2025-10-21_16.54.21'
+[2025-10-21 16.56.51] Making deflated database active
+[2025-10-21 16.56.51] PMS main database deflate completed.
+[2025-10-21 16.56.51] Deflate successful.
+[2025-10-21 16.56.51] Recommend running Auto next to complete optimization of new database.
 
-[2024-01-14 17.28.08] Starting PMS.
-[2024-01-14 17.28.08] Started PMS
+[2025-10-21 16.56.51] Automatic Check,Repair,Index started.
+[2025-10-21 16.56.51]
+[2025-10-21 16.56.51] Checking the PMS databases
+[2025-10-21 16.57.04] Check complete.  PMS main database is OK.
+[2025-10-21 16.57.05] Check complete.  PMS blobs database is OK.
+[2025-10-21 16.57.05]
+[2025-10-21 16.57.05] Exporting current databases using timestamp: 2025-10-21_16.56.51
+[2025-10-21 16.57.05] Exporting Main DB
+[2025-10-21 16.57.24] Exporting Blobs DB
+[2025-10-21 16.59.18] Successfully exported the main and blobs databases.
+[2025-10-21 16.59.18] Start importing into new databases.
+[2025-10-21 16.59.18] Importing Main DB.
+[2025-10-21 16.59.18] Setting Plex SQLite page size (65536)
+[2025-10-21 17.00.19] Importing Blobs DB.
+[2025-10-21 17.00.19] Setting Plex SQLite page size (65536)
+[2025-10-21 17.00.32] Successfully imported databases.
+[2025-10-21 17.00.32] Verifying databases integrity after importing.
+[2025-10-21 17.01.59] Verification complete.  PMS main database is OK.
+[2025-10-21 17.02.01] Verification complete.  PMS blobs database is OK.
+[2025-10-21 17.02.01] Saving current databases with '-BACKUP-2025-10-21_16.56.51'
+[2025-10-21 17.02.01] Making repaired databases active
+[2025-10-21 17.02.01] Repair complete. Please check your library settings and contents for completeness.
+[2025-10-21 17.02.01] Recommend:  Scan Files and Refresh all metadata for each library section.
+[2025-10-21 17.02.01]
+[2025-10-21 17.02.01] Backing up of databases
+[2025-10-21 17.02.01] Backup current databases with '-BACKUP-2025-10-21_17.02.01' timestamp.
+[2025-10-21 17.02.02] Reindexing main database
+[2025-10-21 17.02.13] Reindexing main database successful.
+[2025-10-21 17.02.13] Reindexing blobs database
+[2025-10-21 17.02.14] Reindexing blobs database successful.
+[2025-10-21 17.02.14] Reindex complete.
+[2025-10-21 17.02.14] Automatic Check, Repair/optimize, & Index successful.
+
+[2025-10-21 17.02.14] Starting PMS.
+[2025-10-21 17.02.14] Started PMS
 
 #
 ```
@@ -913,7 +994,7 @@ root@Jasper:/mnt/user/appdata/PlexMediaServer# /tmp/DBRepair.sh --databases /mnt
 
 
 
-      Plex Media Server Database Repair Utility (User Defined)
+      Database Repair Utility for Plex Media Server (User Defined)
                        Version v1.09.00
 
       PlexSQLite = '/var/lib/docker/btrfs/subvolumes/4bb78fb70589d4d2ba56754f4d6bc0edd4cdaa8eab7986943767e09a66cefd19/usr/lib/plexmediaserver//Plex SQLite'
@@ -937,12 +1018,14 @@ Select
 
  21 - 'prune'     - Prune (remove) old image files (jpeg,jpg,png) from PhotoTranscoder cache older than specific age.
  22 - 'purge'     - Purge (remove) all temporary files left by PMS & Transcoder in Temp Dir.'
+ 23 - 'deflate'   - Deflate a bloated PMS main database.
+
 
  42 - 'ignore'    - Ignore duplicate/constraint errors.
 
  88 - 'update'    - Check for updates.
- 99 - 'quit'      - Quit immediately.  Keep all temporary files.
-      'exit'      - Exit with cleanup options.
+ 98 - 'quit'      - Quit immediately.  Keep all temporary files.
+ 99 - 'exit'      - Exit with cleanup options.
 
 Enter command # -or- command name (4 char min) :
 ```

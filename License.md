@@ -1,7 +1,9 @@
-Copyright (c) 2022, ChuckPa.
+Copyright (c) 2025, ChuckPa.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use the Software for personal use only. The Software may not be modified, merged, published, distributed, sublicensed, and/or used in other form without the express written consent of the author.
+This software is the intellectual property of ChuckPa
+and used in conjunction with Plex Media Server (which is Copyright & Trademark of Plex, Inc.)
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+It may not be copied, modified, or redistributed in any way without expressly written permission of ChuckPa.
+
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

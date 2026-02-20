@@ -1,13 +1,96 @@
-# PlexDBRepair
+# DBRepair
 
-[![GitHub issues](https://img.shields.io/github/issues/ChuckPa/PlexDBRepair.svg?style=flat)](https://github.com/ChuckPa/PlexDBRepair/issues)
-[![Release](https://img.shields.io/github/release/ChuckPa/PlexDBRepair.svg?style=flat)](https://github.com/ChuckPa/PlexDBRepair/releases/latest)
-[![Download latest release](https://img.shields.io/github/downloads/ChuckPa/PlexDBRepair/latest/total.svg)](https://github.com/ChuckPa/PlexDBRepair/releases/latest)
-[![Download total](https://img.shields.io/github/downloads/ChuckPa/PlexDBRepair/total.svg)](https://github.com/ChuckPa/PlexDBRepair/releases)
+[![GitHub issues](https://img.shields.io/github/issues/ChuckPa/DBRepair.svg?style=flat)](https://github.com/ChuckPa/DBRepair/issues)
+[![Release](https://img.shields.io/github/release/ChuckPa/DBRepair.svg?style=flat)](https://github.com/ChuckPa/DBRepair/releases/latest)
+[![Download latest release](https://img.shields.io/github/downloads/ChuckPa/DBRepair/latest/total.svg)](https://github.com/ChuckPa/DBRepair/releases/latest)
+[![Download total](https://img.shields.io/github/downloads/ChuckPa/DBRepair/total.svg)](https://github.com/ChuckPa/DBRepair/releases)
 [![master](https://img.shields.io/badge/master-stable-green.svg?maxAge=2592000)]('')
 ![Maintenance](https://img.shields.io/badge/Maintained-Yes-green.svg)
 
 # Release Info:
+v1.14.00
+
+  1. Full-Text Search     - Check and repair Full-Text Search (FTS) database indexes.
+                            Damaged indexes often manifests as "500" internal errors. (Collections)
+                            This release adds support for checking those indexes and rebuilding as needed.
+                            ( Full credit & thanks to @maxfield-allison for this great work )
+
+                            Do not be surprised if your Blobs DB has damaged indexes and needs repair.
+                            Even "Known Good" databases have shown FTS index problems.
+
+v1.13.02
+
+  1. Autoincrement        - Adjust statistics_bandwidth table per Plex engineering suggestion.
+
+v1.13.01
+
+  1. Tag sort order       - Github tags are not guaranteed to be numeric or in most-recent order.
+                            This update sorts version tags numerically and in reverse order  to accommodate github shortcoming.
+
+v1.13.00
+
+  1. Binhex containers    - Add support for updated 'supervisord' start/stop control.
+                            Maintain support for legacy 'supervisor' start/stop control.
+
+                            This will be removed in the next release
+                            Update your container before updating DBRepair.
+
+v1.12.00
+
+  1. Deflate capability   - Deflate a bloated PMS main database and retain bandwidth statistics.
+                            Recommended usage:  "Deflate" followed by "Auto" to optimize the DB after reduction.
+                          - Method changed to reconstruction of bandwidth table versus selective copy.
+                            This results in correct operation of bandwidth statistics functionality
+                            as well as significantly improved performance.
+
+  2. ASUSTOR              - Documentation error README.md corrected
+
+
+v1.11.09
+
+  1. HotIO Paths          - Path defined for Cache dir (and PhotoTranscoder) incorrect.  Fixed.
+
+v1.11.08
+
+  1. Restart after update - Sometimes restart after update would reference the wrong path. Fixed.
+
+v1.11.07
+
+  1. Add support FreeBSD  - Add support for FreeBSD (14+)
+                            Thanks to @cdf-eagles for the work.
+
+v1.11.06
+
+  1. Restart after update - Correct missing variable initialization.
+
+v1.11.05
+
+  1. Remove menu option   - Deflate menu option wasn't previously removed.  Now removed.
+
+v1.11.04
+
+  1. Binhex start/stop    - Add support for stopping and starting PMS in Binhex containers.
+  2. Restart after update - Add option to restart after live updating.
+  3. Remove temp Deflate  - Remove deflate function as of PMS 1.41.8 availability
+
+v1.11.01 - v1.11.03       - Temporary versions to assist PMS database bloat issue.
+
+v1.11.00
+
+  1. Rename Utility       - Rename this tool to be compliant with Plex inc. Trademark Policy.
+                            Update all documentation
+                            Update Github repository
+
+v1.10.06
+
+  1. Update tags          - When updating, DBRepair would not format cleanly.   This update corrects that formatting.
+                            It would often show the tags for multiple previous versions.  This is undesirable.
+
+v1.10.05
+
+  1. DB Cleanup           - Temporary assist with PMS database cleanups
+  2. Record Count report  - Report the number of records in each main DB table. (Monitoring growth)
+
 v1.10.03
 
   1. LC_ALL               - When LC_ALL="", set LC_ALL=C  (MacOS now needs this)
@@ -262,7 +345,7 @@ These type changes can only be performed by PMS.
   For clarity, each command's name is 'quoted'.
 
 
-      Plex Media Server Database Repair Utility (_host_configuration_name_)
+      Database Repair Utility for Plex Media Server (_host_configuration_name_)
                        Version v1.0.0
 
   Select
@@ -327,10 +410,10 @@ These type changes can only be performed by PMS.
 
 ### General installation and usage instructions
 
-        1. Open your browser to https://github.com/ChuckPa/PlexDBRepair/releases/latest
+        1. Open your browser to https://github.com/ChuckPa/DBRepair/releases/latest
         2. Download the source code (tar.gz or ZIP) file
 
-        3. Knowing the file name will always be of the form 'PlexDBRepair-X.Y.Z.tar.gz'
+        3. Knowing the file name will always be of the form 'DBRepair-X.Y.Z.tar.gz'
            --  where X.Y.Z is the release number.  Use the real values in place of X, Y, and Z.
         4. Place the tar.gz file in the appropriate directory on the system you'll use it.
         5. Open a command line session (usually Terminal or SSH)
@@ -347,8 +430,8 @@ These type changes can only be performed by PMS.
 
         cd /volume1/Plex
         sudo bash
-        tar xf PlexDBRepair-x.y.z.tar.gz
-        cd PlexDBRepair-x.y.z
+        tar xf DBRepair-x.y.z.tar.gz
+        cd DBRepair-x.y.z
         chmod +x DBRepair.sh
         ./DBRepair.sh
 
@@ -360,8 +443,8 @@ These type changes can only be performed by PMS.
         sudo docker exec -it plex /bin/bash
 
         # extract from downloaded version file name then cd into directory
-        tar xf PlexDBRepair-1.0.0.tar.gz
-        cd PlexDBRepair-1.0.0
+        tar xf DBRepair-1.0.0.tar.gz
+        cd DBRepair-1.0.0
         chmod +x DBRepair.sh
         ./DBRepair.sh
 ```
@@ -369,8 +452,8 @@ These type changes can only be performed by PMS.
 ```
         sudo bash
         cd /path/to/DBRepair.tar
-        tar xf PlexDBRepair-1.0.0.tar.gz
-        cd PlexDBRepair-1.0.0
+        tar xf DBRepair-1.0.0.tar.gz
+        cd DBRepair-1.0.0
         chmod +x DBRepair.sh
         ./DBRepair.sh stop auto start exit
 ```
@@ -379,8 +462,8 @@ These type changes can only be performed by PMS.
 ```
         osascript -e 'quit app "Plex Media Server"'
         cd ~/Downloads
-        tar xvf PlexDBRepai PlexDBRepair-1.0.0.tar.gz
-        cd PlexDBRepai PlexDBRepair-1.0.0
+        tar xvf PlexDBRepai DBRepair-1.0.0.tar.gz
+        cd PlexDBRepai DBRepair-1.0.0
 
         chmod +x DBRepair.sh
         ./DBRepair.sh
@@ -485,7 +568,7 @@ bash-4.4# ./DBRepair.sh
 
 
 
-      Plex Media Server Database Repair Utility (Synology (DSM 7))
+      Database Repair Utility for Plex Media Server (Synology (DSM 7))
                        Version v1.0.0
 
 
@@ -638,7 +721,7 @@ root@lizum:/sata/plex/Plex Media Server/Plug-in Support/Databases# ./DBRepair.sh
 
 
 
-      Plex Media Server Database Repair Utility (Ubuntu 20.04.5 LTS)
+      Database Repair Utility for Plex Media Server (Ubuntu 20.04.5 LTS)
                        Version v1.0.0
 
 
